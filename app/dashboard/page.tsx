@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     .from('profiles')
     .select('*')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   // Fetch recent sessions
   const { data: sessions } = await supabase
@@ -28,13 +28,13 @@ export default async function DashboardPage() {
 
   // Best scores
   const bestScores: Record<string, number> = {};
-  sessions?.forEach(s => {
+  (sessions ?? []).forEach((s: any) => {
     if (!bestScores[s.game_type] || s.score > bestScores[s.game_type]) {
       bestScores[s.game_type] = s.score;
     }
   });
 
-  const displayName = profile?.display_name ?? user.email?.split('@')[0] ?? '選手';
+  const displayName = (profile as any)?.display_name ?? user.email?.split('@')[0] ?? '選手';
 
   return (
     <div className="min-h-screen bg-navy">
@@ -51,16 +51,16 @@ export default async function DashboardPage() {
           >
             {displayName} 選手 👋
           </h1>
-          {profile?.position && (
+          {(profile as any)?.position && (
             <div className="text-white/40 text-sm mt-1">
-              {profile.position}
-              {profile.team_name ? ` — ${profile.team_name}` : ''}
+              {(profile as any).position}
+              {(profile as any).team_name ? ` — ${(profile as any).team_name}` : ''}
             </div>
           )}
         </div>
 
         {/* Stats row */}
-        <DashboardClient sessions={sessions ?? []} />
+        <DashboardClient sessions={(sessions ?? []) as any[]} />
 
         {/* Game Cards */}
         <div className="mt-10">
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
               📊 最近のプレイ履歴
             </h2>
             <div className="space-y-2">
-              {sessions.slice(0, 5).map(session => (
+              {(sessions as any[]).slice(0, 5).map((session: any) => (
                 <div
                   key={session.id}
                   className="card-glass rounded-xl px-5 py-4 flex items-center justify-between"
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
                       {session.score.toLocaleString()}
                     </div>
                     <div className="text-white/40 text-xs">
-                      正確率 {session.accuracy.toFixed(0)}%
+                      正確率 {Number(session.accuracy).toFixed(0)}%
                     </div>
                   </div>
                 </div>
