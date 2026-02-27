@@ -1,171 +1,292 @@
 # ⚾ WISE Vision Training App
 
-野球選手のためのビジョントレーニングゲームアプリ — PHASE 1 MVP
+野球選手のための**ビジョントレーニングWebアプリ** — PHASE 1 MVP
+
+> KVA動体視力・眼と手の協応・瞬間視を、ゲーム感覚で毎日3分鍛える。
+
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://typescriptlang.org)
+
+---
+
+## 📋 目次
+
+1. [プロジェクト概要](#プロジェクト概要)
+2. [機能一覧](#機能一覧)
+3. [技術スタック](#技術スタック)
+4. [ディレクトリ構成](#ディレクトリ構成)
+5. [環境構築](#環境構築)
+6. [Supabaseセットアップ](#supabaseセットアップ)
+7. [Vercelデプロイ](#vercelデプロイ)
+8. [ゲームモジュール仕様](#ゲームモジュール仕様)
+9. [開発ロードマップ](#開発ロードマップ)
+
+---
+
+## プロジェクト概要
+
+**WISE Baseball Academy Online** が提供するビジョントレーニングWebアプリ。
+
+| 項目 | 内容 |
+|------|------|
+| 対象ユーザー | 小学生〜高校生（野球選手）・コーチ・保護者 |
+| 対応デバイス | iPad（9.7〜13インチ）/ タッチパネルモニター（21〜42インチ）/ PC |
+| デプロイ先 | Vercel（Edge Network） |
+| バックエンド | Supabase（Auth + PostgreSQL） |
+| 現在フェーズ | **PHASE 1 MVP** |
+
+### 科学的根拠
+
+- 人間の外界情報収集の **80〜87%** を視覚が担う
+- 順天堂大学研究（2023年）：視覚トレーニングは実打撃と同等以上の視機能向上効果
+- スポーツビジョンの発達黄金期は **7〜10歳**、ピークは20歳
+- ターゲット年代（小〜高校生）は最も効果が出やすい時期
+
+---
+
+## 機能一覧
+
+### ✅ PHASE 1 実装済み
+
+#### 認証
+- メールアドレス + パスワードによる新規登録（2ステップ）
+- ログイン / ログアウト
+- 未認証ユーザーの自動リダイレクト（middleware保護）
+- プロフィール設定（表示名・守備位置・学年・チーム名）
+
+#### ゲームモジュール（2本）
+- **① ピッチャーリアクション** — KVA動体視力 + 眼と手の協応
+- **⑤ ボールナンバーハント** — KVA動体視力 + 瞬間視
+
+#### ダッシュボード
+- 累計スコア・総セッション数・平均正確率・最速反応時間の表示
+- プレイ履歴（直近5件）
+- ゲームカード（ベストスコア表示）
+
+#### データ保存
+- セッション結果のSupabase保存（スコア・正確率・平均反応時間・難易度）
+- Row Level Security（ユーザーは自分のデータのみアクセス可）
+
+---
 
 ## 技術スタック
 
-- **Next.js 14** (App Router)
-- **TypeScript**
-- **Tailwind CSS** + カスタムデザイントークン
-- **Framer Motion** — アニメーション・エフェクト
-- **Canvas API** — ボール軌道描画
-- **Supabase** — Auth + PostgreSQL DB
-- **Recharts** — グラフ可視化
-- **Zustand** — ゲームステート管理
-- **Vercel** — デプロイ
+| カテゴリ | 技術 | 用途 |
+|----------|------|------|
+| フレームワーク | Next.js 14 (App Router) | SSR・ルーティング |
+| 言語 | TypeScript 5 | 型安全な開発 |
+| スタイリング | Tailwind CSS 3 | レスポンシブUI |
+| アニメーション | Framer Motion 11 | ゲームエフェクト・画面遷移 |
+| 描画 | CSS + SVG | ボール軌道・フィールド表現 |
+| 認証・DB | Supabase (@supabase/ssr) | Auth + PostgreSQL |
+| デプロイ | Vercel | Edge Deploy・CI/CD |
+| 反応計測 | `performance.now()` + `requestAnimationFrame` | ミリ秒精度の計測 |
 
 ---
 
 ## ディレクトリ構成
 
 ```
-app/
-  (auth)/login/        ← ログインページ
-  (auth)/signup/       ← サインアップページ
-  dashboard/           ← メインダッシュボード
-  game/pitcher-reaction/   ← ゲーム①
-  game/ball-number-hunt/   ← ゲーム⑤
-  api/sessions/        ← セッションAPI
-  layout.tsx           ← ルートレイアウト
-  globals.css          ← グローバルスタイル
-
-components/
-  games/PitcherReaction/
-    index.tsx           ← Canvas ゲームロジック
-    GameHUD.tsx         ← スコア・タイマーHUD
-    GameResultOverlay.tsx  ← 結果オーバーレイ
-    GameSetupScreen.tsx    ← 設定画面
-  games/BallNumberHunt/
-    index.tsx           ← Canvas + 4択UIゲームロジック
-
-lib/
-  supabase.ts          ← Supabaseクライアント
-  scoring.ts           ← スコアリング・バッジ・難易度設定
-
-store/
-  gameStore.ts         ← Zustand ゲームステート
-
-types/
-  supabase.ts          ← TypeScript型定義
-
-supabase/migrations/
-  001_initial.sql      ← DBスキーマ
-
-middleware.ts          ← Auth ルート保護
+wise-vision-app/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   ├── login/page.tsx          # ログインページ
+│   │   │   └── signup/page.tsx         # 新規登録（2ステップ）
+│   │   ├── dashboard/
+│   │   │   ├── page.tsx                # ダッシュボード（Server Component）
+│   │   │   └── DashboardClient.tsx     # 統計表示（Client Component）
+│   │   ├── games/
+│   │   │   ├── pitcher-reaction/page.tsx   # ゲーム①ページ
+│   │   │   └── ball-number-hunt/page.tsx   # ゲーム⑤ページ
+│   │   ├── globals.css                 # グローバルスタイル
+│   │   ├── layout.tsx                  # ルートレイアウト
+│   │   └── page.tsx                    # ランディングページ
+│   ├── components/
+│   │   ├── games/
+│   │   │   ├── PitcherReactionGame.tsx # ゲーム①コンポーネント
+│   │   │   └── BallNumberHuntGame.tsx  # ゲーム⑤コンポーネント
+│   │   ├── layout/
+│   │   │   ├── Header.tsx              # ヘッダー（ログアウト含む）
+│   │   │   └── Navigation.tsx          # ナビゲーション
+│   │   └── ui/
+│   │       ├── GameCard.tsx            # ゲーム選択カード
+│   │       └── ScoreDisplay.tsx        # スコア表示
+│   ├── lib/
+│   │   └── supabase/
+│   │       ├── client.ts               # ブラウザ用Supabaseクライアント
+│   │       ├── server.ts               # サーバー用Supabaseクライアント
+│   │       └── middleware.ts           # セッション更新ミドルウェア
+│   └── types/
+│       ├── index.ts                    # アプリ共通型定義
+│       └── database.ts                 # Supabase DB型定義
+├── supabase/
+│   └── migrations/
+│       └── 001_initial_schema.sql      # 初期スキーマ（profiles・game_sessions）
+├── middleware.ts                       # Next.js ルート保護
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
 ```
 
 ---
 
-## セットアップ手順
-
-### 1. Supabase プロジェクト作成
-
-1. [supabase.com](https://supabase.com) でプロジェクトを作成
-2. SQL Editor で `supabase/migrations/001_initial.sql` を実行
-3. Project URL と anon key を取得
-
-### 2. 環境変数設定
-
-`.env.local.example` をコピーして `.env.local` を作成:
+## 環境構築
 
 ```bash
+# 1. クローン
+git clone https://github.com/winniek75/baseball-vison.training.git
+cd baseball-vison.training
+
+# 2. 依存インストール
+npm install
+
+# 3. 環境変数設定
 cp .env.local.example .env.local
+# .env.local を編集（下記参照）
+
+# 4. 開発サーバー起動
+npm run dev
+# → http://localhost:3000
 ```
+
+### 環境変数（`.env.local`）
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+NEXT_PUBLIC_SUPABASE_URL=https://kavnfuywwebkjscdhtmy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ```
-
-### 3. 依存関係インストール
-
-```bash
-npm install
-```
-
-### 4. 開発サーバー起動
-
-```bash
-npm run dev
-```
-
-ブラウザで http://localhost:3000 を開く。
-
-### 5. Vercel デプロイ
-
-```bash
-# Vercel CLI使用
-npx vercel
-
-# または GitHub連携でCI/CD自動デプロイ
-```
-
-Vercel環境変数にも `.env.local` と同じ値を設定すること。
 
 ---
 
-## 実装済み機能 (PHASE 1)
+## Supabaseセットアップ
 
-### ゲームモジュール
+Supabase Dashboard → **SQL Editor** に以下を貼り付けて実行：
 
-#### ① ピッチャーリアクション
-- Canvas API でマウンドから手前に飛ぶボールをアニメーション
-- 球種: 直球 / スライダー / カーブ / チェンジアップ（軌道パターン別）
-- ストライクゾーン表示・ヒット判定
-- `performance.now()` + `pointerdown` でミリ秒計測
-- 難易度5段階（球速・フェイク率・判定窓）
-- プレイ時間: 30秒 / 60秒 / 90秒
+```sql
+-- supabase/migrations/001_initial_schema.sql の内容をそのまま実行
+```
 
-#### ⑤ ボールナンバーハント
-- 回転しながら飛んでくるボールに数字を描画
-- 数字を読み取って4択から回答
-- 難易度で数字範囲・回転速度変化
+作成されるテーブル：
 
-### ダッシュボード
-- 直近7日スコア折れ線グラフ (Recharts)
-- 視機能レーダーチャート (6要素)
-- 連続ログイン日数ストリーク
-- デイリーミッション
-- 獲得バッジ一覧
-- 統計サマリー (総プレイ数・平均反応速度・最高スコア)
+| テーブル | 内容 |
+|----------|------|
+| `profiles` | ユーザープロフィール（表示名・守備位置・学年・チーム名・ロール） |
+| `game_sessions` | ゲーム結果（スコア・正確率・平均反応時間・難易度・ラウンド数） |
 
-### 認証
-- Supabase Email認証
-- 選手 / コーチ ロール
-- middleware.ts で未認証ルート保護
-
-### データ保存
-- 全セッション → Supabase `sessions` テーブル
-- バッジ自動付与
-- 連続ログイン日数 (trigger で自動更新)
+RLSポリシー：ユーザーは自分のデータのみ読み書き可。コーチロールは全データ閲覧可。
 
 ---
 
-## iPad / タッチパネルモニター対応
+## Vercelデプロイ
 
-- `touch-action: manipulation` — iOS 300ms タップ遅延を排除
-- `pointerdown` イベント優先
-- `devicePixelRatio` 考慮のCanvas HiDPI対応
-- タップターゲット: iPad 44px+ / 大型モニター 60px+
-- 画面サイズ検知で `isScreenLarge` フラグ管理
-
----
-
-## PHASE 2 以降 (予定)
-
-- フライトレーサー (DVA動体視力)
-- フラッシュサイン (瞬間視)
-- スタジアムビジョン (周辺視野・大型モニター特化)
-- インフィールドリアクション (DVA左右)
-- ランナーウォッチ (周辺視野+認知判断)
-- コーチ管理画面
-- 週次レポート PDF出力
-- リアルタイム対戦モード
+1. Vercel Dashboard → **New Project** → GitHubリポジトリをインポート
+2. **Root Directory は空白**（変更しない）
+3. Environment Variables を追加：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. **Deploy**
 
 ---
 
-## 参考資料
+## ゲームモジュール仕様
 
-- 企画書: `baseball_vision_training_analysis.html`
-- 順天堂大学研究 (2023): 視覚的トレーニングの効果検証
-- スポーツビジョン6要素: KVA・DVA・眼と手の協応・瞬間視・深視力・周辺視野
+### ① ピッチャーリアクション
+
+| 項目 | 内容 |
+|------|------|
+| 訓練要素 | KVA動体視力（前後）+ 眼と手の協応 |
+| 対象ポジション | バッター全般 |
+| ゲーム時間 | 45〜60秒 |
+| 難易度 | 5段階 |
+| 計測値 | 反応時間（ms）・正確率・スコア |
+
+**ゲームメカニクス：**
+- 画面奥から投球が迫ってくるアニメーション（CSS perspective）
+- 球種：直球・カーブ・スライダー・チェンジアップ・フェイク
+- ストライク球 → タップ ✅ / ボール球・フェイク → タップしない
+- 反応時間で PERFECT（<300ms）/ GREAT（<500ms）/ OK を判定
+- コンボボーナス（3連続ごとに倍率UP）
+
+**難易度変化：**
+
+| Lv | 球速 | フェイク率 | 数字読み |
+|----|------|------------|----------|
+| 1 | 1800ms | 0% | なし |
+| 2 | 1500ms | 10% | なし |
+| 3 | 1200ms | 15% | なし |
+| 4 | 1000ms | 20% | あり |
+| 5 | 800ms | 25% | あり |
+
+---
+
+### ⑤ ボールナンバーハント
+
+| 項目 | 内容 |
+|------|------|
+| 訓練要素 | KVA動体視力 + 瞬間視（情報の瞬間記憶） |
+| 対象ポジション | バッター全般 |
+| ゲーム形式 | 全N ラウンド制 |
+| 難易度 | 5段階 |
+| 計測値 | 正確率・反応時間（ms）・スコア |
+
+**ゲームメカニクス：**
+- ボールが手前に飛んでくる → 一定時間だけ数字が表示される → 消える
+- テンキーで数字を入力して正誤判定
+- 1桁（Lv1〜3）/ 2桁（Lv4〜5）
+- 速く答えるほど高得点（反応時間ボーナス）
+
+**難易度変化：**
+
+| Lv | 表示時間 | ラウンド数 | 桁数 |
+|----|----------|------------|------|
+| 1 | 1000ms | 15 | 1桁 |
+| 2 | 700ms | 18 | 1桁 |
+| 3 | 500ms | 20 | 1桁 |
+| 4 | 350ms | 22 | 2桁 |
+| 5 | 200ms | 25 | 2桁 |
+
+---
+
+## 開発ロードマップ
+
+```
+✅ PHASE 1 — MVP（現在）
+   ├── 認証システム（登録・ログイン）
+   ├── ゲーム① ピッチャーリアクション
+   ├── ゲーム⑤ ボールナンバーハント
+   ├── スコア保存・ダッシュボード
+   └── Vercel デプロイ
+
+🔲 PHASE 2 — 全7モジュール + ゲーミフィケーション
+   ├── ゲーム② フライトレーサー（DVA動体視力）
+   ├── ゲーム③ フラッシュサイン（瞬間視）
+   ├── ゲーム④ スタジアムビジョン（周辺視野・大画面特化）
+   ├── ゲーム⑥ インフィールドリアクション（DVA動体視力）
+   ├── ゲーム⑦ ランナーウォッチ（周辺視野 + 認知判断）
+   ├── XP・レベル・バッジシステム
+   ├── 視機能レーダーチャート（ビジョンプロフィールカード）
+   ├── デイリーミッション・ストリーク
+   └── チーム内ランキング
+
+🔲 PHASE 3 — コーチ機能 + 対戦
+   ├── コーチ管理画面（選手一覧・成長データ）
+   ├── 週次レポート自動生成（PDF）
+   ├── リアルタイム対戦モード（マルチタッチ）
+   ├── 眼ウォームアッププログラム
+   └── LINE連携
+
+🔲 PHASE 4 — スケール
+   ├── 全国リーダーボード（年代別）
+   ├── AI弱点自動診断・パーソナライズ
+   └── 他スポーツへの展開
+```
+
+---
+
+## ライセンス
+
+WISE Baseball Academy Online — All rights reserved.
