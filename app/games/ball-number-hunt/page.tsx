@@ -41,7 +41,8 @@ export default function BallNumberHuntPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from('game_sessions').insert({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from('game_sessions') as any).insert({
           user_id: user.id,
           game_type: 'ball-number-hunt',
           score: res.score,
