@@ -51,7 +51,8 @@ export default function SignupPage() {
 
     if (data.user) {
       // Create profile
-      await supabase.from('profiles').insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('profiles') as any).insert({
         user_id: data.user.id,
         display_name: displayName,
         position: position || null,
